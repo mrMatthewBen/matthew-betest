@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 // require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 
 // Connect to MongoDB Atlas
 mongoose.connect('mongodb+srv://matthewbennettmail:3yIq6kGRyyKxaIce@cluster0.uyrl2at.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', {
