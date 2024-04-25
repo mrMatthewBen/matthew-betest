@@ -1,26 +1,42 @@
-const express = require('express');
-const mongoose = require('mongoose');
-// require('dotenv').config();
+require("dotenv").config();
+
+const express = require("express");
+const mongoose = require("mongoose");
+const jwt = require("jsonwebtoken");
+const { authenticateToken } = require('./middleware/authenticateToken');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
-// Connect to MongoDB Atlas
-mongoose.connect('mongodb+srv://matthewbennettmail:3yIq6kGRyyKxaIce@cluster0.uyrl2at.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  dbName: 'UserCollections',
-}).then(() => {
-  console.log('Connected to MongoDB');
-}).catch(err => {
-  console.error('Error connecting to MongoDB:', err.message);
-});
+mongoose
+  .connect(
+    process.env.MONGODB_URL,
+    {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      dbName: "UserCollections",
+    },
+  )
+  .then(() => {
+    console.log("Connected to MongoDB");
+  })
+  .catch((err) => {
+    console.error("Error connecting to MongoDB:", err.message);
+  });
 
 // Middleware
 app.use(express.json());
 
 // Routes
-app.use('/api/users', require('./routes/users'));
+app.use("/api/users", authenticateToken, require("./routes/users"));
+
+app.post("/login", (req, res) => {
+  const username = req.body.username;
+  const user = { name: username };
+
+  const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
+  res.json({ accessToken: accessToken });
+});
 
 // Start the server
 app.listen(PORT, () => {

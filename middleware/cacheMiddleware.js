@@ -1,55 +1,79 @@
-const redis = require('redis');
+const redis = require("redis");
 const client = redis.createClient(6379);
 
 // Handle Redis client errors
-client.on('error', (err) => {
-    console.error('Redis client error:', err);
+client.on("error", (err) => {
+  console.error("Redis client error:", err);
 });
 
 function cacheUser(req, res, next) {
-    const accountNumber = req.params.accountNumber;
+  const accountId = req.params.accountId;
 
-    console.log({accountNumber}, req.params)
+  const operationType = req.method;
 
-    if (typeof accountNumber === 'undefined') {
-        console.error('Error: Key is undefined');
-        return;
+  if (typeof accountId === "undefined") {
+    console.error("Error: Key is undefined");
+    return;
+  }
+
+  client.get(accountId, (err, cachedData) => {
+    if (err) throw err;
+
+    if (cachedData !== null) {
+      if (operationType != "GET") {
+        next();
+      } else {
+        res.json(JSON.parse(cachedData));
+      }
+    } else {
+      next();
     }
+  });
+}
 
-    client.get(accountNumber, (err, cachedData) => {
-        if (err) throw err;
+function cacheUserAccountNumber(req, res, next) {
+  const accountNumber = req.params.accountNumber;
 
-        if (cachedData !== null) {
-            console.log('User data found in cache');
-            console.log({cachedData})
-            res.json(JSON.parse(cachedData));
-        } else {
-            next();
-        }
-    });
+  if (typeof accountNumber === "undefined") {
+    console.error("Error: Key is undefined");
+    return;
+  }
+
+  client.get(accountNumber, (err, cachedData) => {
+    if (err) throw err;
+
+    if (cachedData !== null) {
+      res.json(JSON.parse(cachedData));
+    } else {
+      next();
+    }
+  });
 }
 
 function cacheUserIdentity(req, res, next) {
-    const identityNumber = req.params.identityNumber;
+  const identityNumber = req.params.identityNumber;
 
-    console.log({identityNumber}, req.params)
+  console.log({ identityNumber }, req.params);
 
-    if (typeof identityNumber === 'undefined') {
-        console.error('Error: Key is undefined');
-        return;
+  if (typeof identityNumber === "undefined") {
+    console.error("Error: Key is undefined");
+    return;
+  }
+
+  client.get(identityNumber, (err, cachedData) => {
+    if (err) throw err;
+
+    if (cachedData !== null) {
+      res.json(JSON.parse(cachedData));
+    } else {
+      next();
     }
-
-    client.get(identityNumber, (err, cachedData) => {
-        if (err) throw err;
-
-        if (cachedData !== null) {
-            console.log('User data found in cache');
-            console.log({cachedData})
-            res.json(JSON.parse(cachedData));
-        } else {
-            next();
-        }
-    });
+  });
 }
 
-module.exports = { cacheUser, cacheUserIdentity, client };
+module.exports = {
+  cacheUser,
+  cacheUserAccountNumber,
+  cacheUserIdentity,
+  client,
+};
